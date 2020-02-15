@@ -1,0 +1,6 @@
+{
+    "email": "rudi@nmare.net",
+    "smtp_server":"oogieboogie.nightmare.haus:587",
+    "auth_server":"oogieboogie.nightmare.haus",
+    "private_key":""
+}

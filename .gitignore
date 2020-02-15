@@ -1,0 +1,6 @@
+conf.json
+priv.key
+emailBot
+Keybase-Email.log
+*.eml
+*.sig
