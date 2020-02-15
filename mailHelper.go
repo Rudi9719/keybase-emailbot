@@ -1,10 +1,13 @@
 package main
 
 import "fmt"
+import "io/ioutil"
 import "net/smtp"
 
 func send(e Email) {
-	e.Body = signMessage(e.Body)
+	e.Body = appendSignature(e.Body)
+
+	//e.Body = signMessage(e.Body)
 
 	message := fmt.Sprintf("From: %s\n", conf.MyEmail)
 	for _, recipient := range e.Recipients {
@@ -28,4 +31,13 @@ func send(e Email) {
 		log.LogErrorType(err)
 	}
 	log.LogInfo("Email Sent")
+}
+
+func appendSignature(body string) string {
+	bytes, err := ioutil.ReadFile("default.sig")
+	if err != nil {
+		log.LogErrorType(err)
+	}
+	return signMessage(fmt.Sprintf("%s\n\n%s", body, string(bytes)))
+
 }
