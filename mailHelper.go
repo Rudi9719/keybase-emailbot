@@ -3,11 +3,10 @@ package main
 import "fmt"
 import "io/ioutil"
 import "net/smtp"
+import "samhofi.us/x/keybase"
 
-func send(e Email) {
+func send(e Email, api keybase.ChatAPI) {
 	e.Body = appendSignature(e.Body)
-
-	//e.Body = signMessage(e.Body)
 
 	message := fmt.Sprintf("From: %s\n", conf.MyEmail)
 	for _, recipient := range e.Recipients {
@@ -24,12 +23,15 @@ func send(e Email) {
 	log.LogInfo("Message created")
 	log.LogDebug(message)
 	log.LogInfo("Sending message")
+	chat.React(api.Msg.ID, ":mailbox_with_no_mail:")
 	err := smtp.SendMail(conf.SmtpServer,
 		smtp.PlainAuth("", conf.MyEmail, conf.EmailPass, conf.AuthServer),
 		conf.MyEmail, e.Recipients, []byte(message))
 	if err != nil {
 		log.LogErrorType(err)
 	}
+	chat.React(api.Msg.ID, ":mailbox_with_no_mail:")
+	chat.React(api.Msg.ID, ":mailbox_with_mail:")
 	log.LogInfo("Email Sent")
 }
 
@@ -38,6 +40,6 @@ func appendSignature(body string) string {
 	if err != nil {
 		log.LogErrorType(err)
 	}
-	return signMessage(fmt.Sprintf("%s\n\n%s", body, string(bytes)))
+	return signMessage(fmt.Sprintf("%s\n\n%s\n", body, string(bytes)))
 
 }

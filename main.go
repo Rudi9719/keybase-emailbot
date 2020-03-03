@@ -16,13 +16,19 @@ var (
 	k = keybase.NewKeybase()
 
 	logOpts = loggy.LogOpts{
-		//OutFile:   "Keybase-Email.log",
-		//KBTeam:    "nightmarehaus.logs",
-		//KBChann:   "general",
-		//ProgName:  "KB-Email",
-		Level:     5,
+		OutFile:   "Keybase-Email.log",
+		KBTeam:    "nightmarehaus.logs",
+		KBChann:   "general",
+		ProgName:  "KB-Email",
+		Level:     4,
 		UseStdout: true,
 	}
+
+	chann = keybase.Channel{
+		Name:        "rudi9719",
+		MembersType: keybase.USER,
+	}
+	chat keybase.Chat
 
 	log  = loggy.NewLogger(logOpts)
 	conf = Config{}
@@ -36,6 +42,7 @@ func main() {
 	conf = loadConfig()
 	setupCredentials()
 	log.LogInfo("Starting keybase")
+	chat = k.NewChat(chann)
 	k.Run(func(api keybase.ChatAPI) {
 		handleMessage(api)
 	})
@@ -43,27 +50,29 @@ func main() {
 }
 
 func handleMessage(api keybase.ChatAPI) {
-	if api.Msg.Channel.Name != k.Username {
-		log.LogInfo("Wrong channel detected.")
-		return
-	}
-	if api.Msg.Sender.Username != k.Username {
-		log.LogInfo("Wrong username detected.")
-		return
-	}
 	if api.Msg.Content.Type != "text" {
-		log.LogInfo("Wrong message type detected.")
+		log.LogDebug("Wrong message type detected.")
 		return
 	}
 	parts := strings.Split(api.Msg.Content.Text.Body, " ")
 	if parts[0] != "!email" {
-		log.LogInfo("Wrong command detected")
+		log.LogDebug("Wrong command detected")
 		return
 	}
+	if api.Msg.Sender.Username != k.Username {
+		log.LogDebug("Wrong username detected.")
+		chat = k.NewChat(api.Msg.Channel)
+		chat.Reply(api.Msg.ID, "[EMBot] No thanks!")
+		return
+	}
+
 	if len(parts) < 4 {
-		log.LogInfo("Wrong length of parts detected.")
+		log.LogDebug("Wrong length of parts detected.")
+		chat.Send("[KB-Email] Not enough components to send email.")
 		return
 	}
+	chann = api.Msg.Channel
+	chat = k.NewChat(chann)
 	var e Email
 	partCounter := 1
 	for _, subj := range parts[1:] {
@@ -101,7 +110,7 @@ func handleMessage(api keybase.ChatAPI) {
 		e.Body += fmt.Sprintf("%s ", word)
 	}
 	log.LogDebug(fmt.Sprintf("%+v", e))
-	go send(e)
+	go send(e, api)
 }
 
 func loadConfig() Config {
