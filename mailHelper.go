@@ -24,13 +24,20 @@ func send(e Email, api keybase.ChatAPI) {
 	log.LogDebug(message)
 	log.LogInfo("Sending message")
 	chat.React(api.Msg.ID, ":mailbox_with_no_mail:")
+	if conf.KeyPass == "" {
+		chat.React(api.Msg.ID, ":unlock:")
+	} else {
+		chat.React(api.Msg.ID, ":lock_with_ink_pen:")
+	}
 	err := smtp.SendMail(conf.SmtpServer,
 		smtp.PlainAuth("", conf.MyEmail, conf.EmailPass, conf.AuthServer),
 		conf.MyEmail, e.Recipients, []byte(message))
+	chat.React(api.Msg.ID, ":mailbox_with_no_mail:")
 	if err != nil {
 		log.LogErrorType(err)
+		chat.React(api.Msg.ID, ":warning:")
+		return
 	}
-	chat.React(api.Msg.ID, ":mailbox_with_no_mail:")
 	chat.React(api.Msg.ID, ":mailbox_with_mail:")
 	log.LogInfo("Email Sent")
 }

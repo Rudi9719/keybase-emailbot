@@ -39,6 +39,9 @@ func getPrivateKey() *openpgp.Entity {
 }
 
 func signMessage(m string) string {
+	if conf.KeyPass == "" {
+		return m
+	}
 	pk := getPrivateKey()
 	out := new(bytes.Buffer)
 	in, err := clearsign.Encode(out, pk.PrivateKey, nil)

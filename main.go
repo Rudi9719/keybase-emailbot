@@ -131,16 +131,22 @@ func loadConfig() Config {
 	return c
 }
 func setupCredentials() {
-	log.LogCritical("Enter pgp key passphrase:")
+	log.LogCritical("Enter optional pgp key passphrase:")
 	bytePass, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		log.LogCritical(fmt.Sprintf("Error reading pgp password:\n```%+v```", err))
 	}
 	conf.KeyPass = strings.TrimSpace(string(bytePass))
-	log.LogCritical("Enter email passphrase:")
-	bytePass, err = terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		log.LogCritical(fmt.Sprintf("Error reading email password:\n```%+v```", err))
+	if conf.KeyPass == "" {
+		log.LogCritical("Starting without PGP signature capabilities.")
 	}
-	conf.EmailPass = strings.TrimSpace(string(bytePass))
+	for i := len(conf.EmailPass); i < 1; i = len(conf.EmailPass) {
+		log.LogCritical("Enter required email passphrase:")
+		bytePass, err = terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.LogCritical(fmt.Sprintf("Error reading email password:\n```%+v```", err))
+		}
+		conf.EmailPass = strings.TrimSpace(string(bytePass))
+
+	}
 }
